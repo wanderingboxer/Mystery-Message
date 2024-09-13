@@ -1,63 +1,79 @@
-'use client';
+"use client";
 
-import { ApiResponse } from '@/types/ApiResponse';
-import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useDebounceCallback } from 'usehooks-ts';
-import * as z from 'zod';
+import { ApiResponse } from "@/types/ApiResponse";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDebounceCallback } from "usehooks-ts";
+import * as z from "zod";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
-import axios, { AxiosError } from 'axios';
-import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { signUpSchema } from '@/schemas/signUpSchema';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import axios, { AxiosError } from "axios";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { signUpSchema } from "@/schemas/signUpSchema";
 
 export default function SignUpForm() {
-  const [username, setUsername] = useState('');
-  const [usernameMessage, setUsernameMessage] = useState('');
+  //state for storing username
+  const [username, setUsername] = useState("");
+  //state for storing the message received from the backend regarding whether
+  //username is unique or not
+  const [usernameMessage, setUsernameMessage] = useState("");
+  //state for storing boolean regarding whether backend has responded yet or not
+  //helps in keeping the loader alive till then
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  //similarly this is for the submition part
   const [isSubmitting, setIsSubmitting] = useState(false);
+  //returns the debounced function which will update the username after 300ms and
+  //if the user is typing, the value username needs to change to that value and the final value
+  //it needs to change to keeps getting updated due to typing but once the typing stops for more than 300ms
+  //, the state's value changes to the final value and triggers a re-render
   const debounced = useDebounceCallback(setUsername, 300);
 
   const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof signUpSchema>>({
+    //uses Zod resolver using the signUpSchema we made earlier
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      username: '',
-      email: '',
-      password: '',
+      username: "",
+      email: "",
+      password: "",
     },
   });
 
   useEffect(() => {
     const checkUsernameUnique = async () => {
+      //since anyways the username is getting updated after 300ms so
       if (username) {
+        //mark the start of the loader
         setIsCheckingUsername(true);
-        setUsernameMessage(''); // Reset message
+        setUsernameMessage(""); // Reset message
         try {
+          //make a call to the API
           const response = await axios.get<ApiResponse>(
             `/api/check-username-unique?username=${username}`
           );
+          //get the message
           setUsernameMessage(response.data.message);
         } catch (error) {
           const axiosError = error as AxiosError<ApiResponse>;
           setUsernameMessage(
-            axiosError.response?.data.message ?? 'Error checking username'
+            axiosError.response?.data.message ?? "Error checking username"
           );
         } finally {
+          //either it works fine or error occurs, we gotta end the loader
           setIsCheckingUsername(false);
         }
       }
@@ -66,45 +82,50 @@ export default function SignUpForm() {
   }, [username]);
 
   const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
+    //start the loader
     setIsSubmitting(true);
     try {
-      const response = await axios.post<ApiResponse>('/api/sign-up', data);
+      //make the POST request to the API with the data
+      const response = await axios.post<ApiResponse>("/api/sign-up", data);
 
       toast({
-        title: 'Success',
+        title: "Success",
         description: response.data.message,
       });
 
+      //on success, go for verification
       router.replace(`/verify/${username}`);
 
+      //end the loader
       setIsSubmitting(false);
     } catch (error) {
-      console.error('Error during sign-up:', error);
+      console.error("Error during sign-up:", error);
 
       const axiosError = error as AxiosError<ApiResponse>;
 
       // Default error message
       let errorMessage = axiosError.response?.data.message;
-      ('There was a problem with your sign-up. Please try again.');
+      ("There was a problem with your sign-up. Please try again.");
 
       toast({
-        title: 'Sign Up Failed',
+        title: "Sign Up Failed",
         description: errorMessage,
-        variant: 'destructive',
+        variant: "destructive",
       });
 
+      //end the loader
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-800">
+    <div className="flex justify-center items-center min-h-screen">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-6">
-            Join True Feedback
+          <h1 className="text-3xl font-extrabold tracking-tight lg:text-5xl mb-6">
+            Join the Community
           </h1>
-          <p className="mb-4">Sign up to start your anonymous adventure</p>
+          <p className="mb-4">Sign up to get started</p>
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -116,7 +137,7 @@ export default function SignUpForm() {
                   <FormLabel>Username</FormLabel>
                   <Input
                     {...field}
-                    onChange={(e) => {
+                    onChange={(e: any) => {
                       field.onChange(e);
                       debounced(e.target.value);
                     }}
@@ -125,9 +146,9 @@ export default function SignUpForm() {
                   {!isCheckingUsername && usernameMessage && (
                     <p
                       className={`text-sm ${
-                        usernameMessage === 'Username is unique'
-                          ? 'text-green-500'
-                          : 'text-red-500'
+                        usernameMessage === "Username is available"
+                          ? "text-green-500"
+                          : "text-red-500"
                       }`}
                     >
                       {usernameMessage}
@@ -144,7 +165,9 @@ export default function SignUpForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <Input {...field} name="email" />
-                  <p className='text-muted text-gray-400 text-sm'>We will send you a verification code</p>
+                  <p className="text-muted text-gray-400 text-sm">
+                    We will send you a verification code
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -161,21 +184,21 @@ export default function SignUpForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className='w-full' disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Please wait
                 </>
               ) : (
-                'Sign Up'
+                "Sign Up"
               )}
             </Button>
           </form>
         </Form>
         <div className="text-center mt-4">
           <p>
-            Already a member?{' '}
+            Already a member?{" "}
             <Link href="/sign-in" className="text-blue-600 hover:text-blue-800">
               Sign in
             </Link>
