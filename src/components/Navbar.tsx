@@ -13,24 +13,6 @@ function Navbar() {
   const { toast } = useToast();
   const { data: session } = useSession();
   const user : User = session?.user;
-  const handleSignInTestUser = async () => {
-    const result = await signIn("credentials", {
-     redirect: false,
-     identifier: "test@test.com",
-     password: "test1234",
-     });
-     if (result?.error) {
-       toast({
-         title: "Test user Sign in failed",
-         description: result.error,
-         variant: "destructive"
-       });
- 
-     }
-     if(result?.url){
-       router.replace('/dashboard')
-     }  
-   };
 
   const handleSignOut = async () => {
     await signOut({ redirect: false }); 
@@ -64,9 +46,6 @@ function Navbar() {
               Login
             </Button>
           </Link>
-          <Button onClick={handleSignInTestUser} className="bg-blue-600 text-white hover:bg-blue-700">
-            Test User
-          </Button>
         </>
       )}
     </div>
