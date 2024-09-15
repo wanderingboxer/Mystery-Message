@@ -23,7 +23,7 @@ function Navbar() {
   <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
     <div className="flex items-center">
       <a href="#" className="text-xl font-bold mb-2 md:mb-0">
-        True Feedback
+        Mystery Message
       </a>
       <span className="ml-2 md:hidden">
         {session && `Welcome, ${user.username || user.email}`}
