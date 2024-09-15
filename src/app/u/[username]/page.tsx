@@ -91,7 +91,13 @@ export default function SendMessage() {
       complete('');
     } catch (error) {
       console.error('Error fetching messages:', error);
-      // Handle error appropriately
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      form.handleSubmit(onSubmit)();
     }
   };
 
@@ -113,6 +119,7 @@ export default function SendMessage() {
                     placeholder="Write your anonymous message here"
                     className="resize-none"
                     {...field}
+                    onKeyDown={handleKeyPress}
                   />
                 </FormControl>
                 <FormMessage />
